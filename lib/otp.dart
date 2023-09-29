@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:otp_verification/home.dart';
+import 'package:otp_verification/phone.dart';
 import 'package:pinput/pinput.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MyOtp extends StatefulWidget {
   const MyOtp({super.key});
@@ -10,6 +12,7 @@ class MyOtp extends StatefulWidget {
 }
 
 class _MyOtpState extends State<MyOtp> {
+  final FirebaseAuth auth = FirebaseAuth.instance;
   @override
   Widget build(BuildContext context) {
     final defaultPinTheme = PinTheme(
@@ -35,6 +38,7 @@ class _MyOtpState extends State<MyOtp> {
         color: Color.fromRGBO(234, 239, 243, 1),
       ),
     );
+    var code = "";
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -56,6 +60,9 @@ class _MyOtpState extends State<MyOtp> {
           Pinput(
             length: 6,
             showCursor: true,
+            onChanged: (value) {
+              code = value;
+            },
           ),
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -63,15 +70,25 @@ class _MyOtpState extends State<MyOtp> {
                 height: 35,
                 width: double.infinity,
                 child: ElevatedButton(
-                    onPressed: () {}, child: Text("Verify phone number"))),
+                    onPressed: () async {
+                      try {
+                        PhoneAuthCredential credential =
+                            PhoneAuthProvider.credential(
+                                verificationId: MyPhone.verify, smsCode: code);
+
+                        await auth.signInWithCredential(credential);
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, "HomePage", (route) => false);
+                      } catch (e) {}
+                    },
+                    child: Text("Verify phone number"))),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               TextButton(
                   onPressed: () {
-                    Navigator.pushNamedAndRemoveUntil(
-                        context, "Phone", (route) => false);
+                    Navigator.pushNamed(context, "Phone");
                   },
                   child: Text(
                     "Edit phone number ?",

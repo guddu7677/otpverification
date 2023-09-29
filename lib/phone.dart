@@ -1,16 +1,22 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class MyPhone extends StatefulWidget {
   const MyPhone({super.key});
 
+  static String verify = "";
+
   @override
   State<MyPhone> createState() => _MyPhoneState();
 }
 
 class _MyPhoneState extends State<MyPhone> {
+  TextEditingController countrycode = TextEditingController();
+  var phone = "";
   @override
   void initState() {
+    countrycode.text = "+91";
     super.initState();
   }
 
@@ -63,6 +69,10 @@ class _MyPhoneState extends State<MyPhone> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: TextField(
+                          keyboardType: TextInputType.phone,
+                          onChanged: (value) {
+                            phone = value;
+                          },
                           decoration: InputDecoration(
                               hintStyle: GoogleFonts.poppins(
                                   fontSize: 12, fontWeight: FontWeight.normal),
@@ -80,8 +90,18 @@ class _MyPhoneState extends State<MyPhone> {
                 height: 35,
                 width: double.infinity,
                 child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, "Otp");
+                    onPressed: () async {
+                      await FirebaseAuth.instance.verifyPhoneNumber(
+                        phoneNumber: '${countrycode.text + phone}',
+                        verificationCompleted:
+                            (PhoneAuthCredential credential) {},
+                        verificationFailed: (FirebaseAuthException e) {},
+                        codeSent: (String verificationId, int? resendToken) {
+                          MyPhone.verify = verificationId;
+                          Navigator.pushNamed(context, "Otp");
+                        },
+                        codeAutoRetrievalTimeout: (String verificationId) {},
+                      );
                     },
                     child: Text("Send Otp"))),
           )
